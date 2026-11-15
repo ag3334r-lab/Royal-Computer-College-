@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function getUserData(uid) {
+      let doc = get(/databases/$(database)/documents/users/$(uid));
+      return doc == null ? null : doc.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'admin')
+      );
+    }
+
+    function isTeacher() {
+      return isSignedIn() && getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'teacher';
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+               data.get('role', 'student') in ['student', 'teacher', 'admin'] &&
+               data.name is string && data.name.size() <= 100 &&
+               data.email is string && data.email.size() <= 100;
+      }
+
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && 
+                      isValidUser(incoming()) && 
+                      incoming().role == 'student' &&
+                      incoming().createdAt == request.time;
+      allow update: if (isOwner(userId) || isAdmin()) &&
+                      isValidUser(incoming()) &&
+                      (isAdmin() || (
+                        incoming().role == existing().role &&
+                        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'profileImage', 'xp', 'badges'])
+                      ));
+    }
+
+    // 2. Courses Collection
+    match /courses/{courseId} {
+      function isValidCourse(data) {
+        return data.keys().hasAll(['title', 'description', 'category', 'instructorId', 'createdAt']) &&
+               data.title is string && data.title.size() <= 200 &&
+               data.instructorId == request.auth.uid;
+      }
+
+      allow read: if true;
+      allow create: if (isTeacher() || isAdmin()) && isValidCourse(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isAdmin() || (isTeacher() && existing().instructorId == request.auth.uid)) &&
+                      isValidCourse(incoming()) &&
+                      incoming().instructorId == existing().instructorId;
+      allow delete: if isAdmin();
+    }
+
+    // 3. Enrollments Collection
+    match /enrollments/{enrollmentId} {
+      function isValidEnrollment(data) {
+        return data.keys().hasAll(['userId', 'courseId', 'enrolledAt']) &&
+               data.userId == request.auth.uid;
+      }
+
+      allow get: if isSignedIn() && (resource == null || isOwner(resource.data.userId) || isAdmin());
+      allow list: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isSignedIn() && isValidEnrollment(incoming()) && incoming().enrolledAt == request.time;
+      allow update: if isSignedIn() && isOwner(existing().userId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['progress', 'completedModules']) &&
+                      incoming().userId == existing().userId;
+    }
+
+    // 4. Quizzes
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // 5. Quiz Results
+    match /quiz_results/{resultId} {
+      allow get: if isSignedIn() && (resource == null || isOwner(resource.data.userId) || isAdmin());
+      allow list: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+    }
+
+    // 6. Certificates
+    match /certificates/{certId} {
+      allow get: if isSignedIn() && (resource == null || isOwner(resource.data.userId) || isAdmin());
+      allow list: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAdmin(); // System issued
+    }
+  }
+}

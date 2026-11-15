@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user of the platform (student, teacher, or admin).",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["student", "teacher", "admin"] },
+        "profileImage": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "xp": { "type": "integer" },
+        "badges": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Represents a learning course.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "instructorId": { "type": "string" },
+        "instructorName": { "type": "string" },
+        "level": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "duration": { "type": "string" },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "content": { "type": "string" },
+              "videoUrl": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "category", "instructorId", "createdAt"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Links a user to a course they have joined.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "progress": { "type": "number" },
+        "completedModules": { "type": "array", "items": { "type": "string" } },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "courseId", "enrolledAt"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Issued to a student upon course completion.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "courseTitle": { "type": "string" },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "certificateId": { "type": "string" }
+      },
+      "required": ["userId", "courseId", "studentName", "courseTitle", "issuedAt"]
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "Assesses student knowledge within a course.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctAnswer": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "QuizResult": {
+      "title": "QuizResult",
+      "description": "The result of a student taking a quiz.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "quizId": { "type": "string" },
+        "score": { "type": "number" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Collection of all users."
+    },
+    "courses": {
+      "schema": "Course",
+      "description": "Collection of available courses."
+    },
+    "enrollments": {
+      "schema": "Enrollment",
+      "description": "Collection of user course enrollments."
+    },
+    "certificates": {
+      "schema": "Certificate",
+      "description": "Collection of issued certificates."
+    },
+    "quizzes": {
+      "schema": "Quiz",
+      "description": "Collection of course quizzes."
+    },
+    "quiz_results": {
+      "schema": "QuizResult",
+      "description": "Collection of student quiz results."
+    }
+  }
+}
