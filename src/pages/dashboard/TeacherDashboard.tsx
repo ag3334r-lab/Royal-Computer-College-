@@ -129,7 +129,7 @@ export default function TeacherDashboard({ user }: { user: User | null }) {
             {[1, 2].map(i => (
               <Card key={i} className="premium-card group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all">
                  <CardContent className="p-0 flex h-40">
-                    <img src="https://images.unsplash.com/photo-1677442136019?auto=format&fit=crop&q=80&w=400" className="w-1/3 object-cover h-full" alt="Course" />
+                    <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=400" className="w-1/3 object-cover h-full" alt="Course" />
                     <div className="flex-1 p-6 flex flex-col justify-between">
                        <div className="space-y-1">
                           <div className="flex items-center justify-between">

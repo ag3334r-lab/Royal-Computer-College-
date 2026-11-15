@@ -2,10 +2,12 @@ import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Rocket, Shield, Award, Users, BookOpen, Brain, Zap, Globe, Sparkles } from 'lucide-react';
 
 export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col w-full">
       {/* Hero Section */}
@@ -86,16 +88,17 @@ export default function Home() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: 'AI & Machine Learning', icon: Brain, color: 'bg-blue-500' },
+              { title: 'AI & Data Science', icon: Brain, color: 'bg-blue-500' },
               { title: 'Web Development', icon: Globe, color: 'bg-emerald-500' },
-              { title: 'Graphic Designing', icon: zap, color: 'bg-amber-500' },
+              { title: 'Graphic Designing', icon: Zap, color: 'bg-amber-500' },
               { title: 'Cyber Security', icon: Shield, color: 'bg-rose-500' },
               { title: 'Digital Marketing', icon: Rocket, color: 'bg-indigo-500' },
-              { title: 'App Development', icon: Sparkles, color: 'bg-violet-500' },
+              { title: 'All Courses', icon: Sparkles, color: 'bg-violet-500' },
             ].map((cat, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
+                onClick={() => navigate(cat.title === 'All Courses' ? '/courses' : `/courses?category=${encodeURIComponent(cat.title)}`)}
                 className="group p-8 rounded-3xl border bg-card hover:border-primary/50 transition-all duration-300 cursor-pointer"
               >
                 <div className={`w-12 h-12 rounded-2xl ${cat.color}/10 flex items-center justify-center mb-6`}>
@@ -161,5 +164,3 @@ export default function Home() {
     </div>
   );
 }
-
-const zap = Zap;

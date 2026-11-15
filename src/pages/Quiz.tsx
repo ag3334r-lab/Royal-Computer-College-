@@ -52,7 +52,7 @@ export default function Quiz() {
 
   const handleNext = () => {
     if (selectedOption === questions[currentQuestion].correct) {
-      setScore(score + 1);
+      setScore(prev => prev + 1);
     }
 
     if (currentQuestion + 1 < questions.length) {
@@ -92,7 +92,7 @@ export default function Quiz() {
 
         <div className="flex gap-4 justify-center">
            <Button variant="outline" className="rounded-full px-8" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
-           <Button className="rounded-full px-8" onClick={() => navigate(`/courses/${id}`)}>Back to Course</Button>
+           <Button className="rounded-full px-8" onClick={() => navigate(`/courses/${id || 'course-1'}`)}>Back to Course</Button>
         </div>
       </div>
     );

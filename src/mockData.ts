@@ -46,7 +46,7 @@ export const MOCK_COURSES: Course[] = [
     instructorId: 'inst-3',
     instructorName: 'Jordan Smith',
     level: 'Beginner',
-    duration: ' sampling',
+    duration: '14h 30m',
     createdAt: new Date().toISOString(),
     modules: [
       { id: 'm1', title: 'Color Theory & Layout', content: 'The basics of great design.', videoUrl: '#' }
@@ -54,7 +54,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'course-4',
-    title: 'Cyber Security: ethical Hacking 101',
+    title: 'Cyber Security: Ethical Hacking 101',
     description: 'Understand the world of cyber security. Learn how to protect systems and stay safe online.',
     thumbnail: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
     category: 'Cyber Security',
@@ -64,6 +64,9 @@ export const MOCK_COURSES: Course[] = [
     level: 'Advanced',
     duration: '22h 10m',
     createdAt: new Date().toISOString(),
-    modules: []
+    modules: [
+      { id: 'm1', title: 'Network Security Foundations', content: 'Understanding TCP/IP, firewalls, and traffic analysis.', videoUrl: '#' },
+      { id: 'm2', title: 'Vulnerability Assessment', content: 'Identifying and patching common web and network flaws.', videoUrl: '#' }
+    ]
   }
 ];

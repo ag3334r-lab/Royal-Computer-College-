@@ -44,6 +44,18 @@ export default function AIChatbot({ context }: { context?: string }) {
     setLoading(true);
 
     try {
+      if (!genAI) {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content:
+              'Royal AI live responses require a VITE_GEMINI_API_KEY secret in your deployment environment. Meanwhile, feel free to explore course modules, live classes, and quizzes!'
+          }
+        ]);
+        return;
+      }
+
       const model = getModel();
       const prompt = `
         You are "Royal AI", a helpful, professional, and friendly learning assistant for Royal Computer College students.

@@ -34,18 +34,24 @@ export default function CourseDetail({ user }: { user: User | null }) {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [saved, setSaved] = useState(false);
+
   useEffect(() => {
-    // In a real app, fetch from Firestore. For now, use mock if not found in db.
     const fetchCourse = async () => {
-      const mock = MOCK_COURSES.find(c => c.id === id);
-      setCourse(mock || null);
-      
-      if (user && id) {
-        const enrollmentId = `${user.id}_${id}`;
-        const enrollmentDoc = await getDoc(doc(db, 'enrollments', enrollmentId));
-        setIsEnrolled(enrollmentDoc.exists());
+      try {
+        const mock = MOCK_COURSES.find(c => c.id === id);
+        setCourse(mock || null);
+
+        if (user && id) {
+          const enrollmentId = `${user.id}_${id}`;
+          const enrollmentDoc = await getDoc(doc(db, 'enrollments', enrollmentId));
+          setIsEnrolled(enrollmentDoc.exists());
+        }
+      } catch (error) {
+        console.error('Error loading course details:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchCourse();
@@ -166,7 +172,7 @@ export default function CourseDetail({ user }: { user: User | null }) {
                         <AccordionContent className="pb-6 text-muted-foreground italic leading-relaxed">
                           {module.content}
                           <div className="mt-4 flex items-center gap-4">
-                             <Button size="sm" variant="outline" className="rounded-full">
+                             <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(`/class/${course.id}`)}>
                                <PlayCircle className="w-4 h-4 mr-2" /> Start Video
                              </Button>
                              <span className="text-xs">15:30 mins</span>
@@ -228,12 +234,30 @@ export default function CourseDetail({ user }: { user: User | null }) {
                           </Button>
                         )}
 
+                        <Button variant="outline" className="w-full rounded-full" onClick={() => navigate(`/quiz/${course.id}`)}>
+                          Practice Course Quiz
+                        </Button>
+
                         <div className="flex gap-2">
-                           <Button variant="outline" size="icon" className="flex-1 rounded-2xl h-12">
-                             <Share2 className="w-5 h-4 mr-2" /> Share
+                           <Button
+                             variant="outline"
+                             className="flex-1 rounded-2xl h-12"
+                             onClick={() => {
+                               navigator.clipboard?.writeText(window.location.href);
+                               toast.success('Course link copied to clipboard!');
+                             }}
+                           >
+                             <Share2 className="w-4 h-4 mr-2" /> Share
                            </Button>
-                           <Button variant="outline" size="icon" className="flex-1 rounded-2xl h-12">
-                             <Bookmark className="w-5 h-4 mr-2" /> Save
+                           <Button
+                             variant={saved ? 'secondary' : 'outline'}
+                             className="flex-1 rounded-2xl h-12"
+                             onClick={() => {
+                               setSaved(!saved);
+                               toast.success(saved ? 'Removed from bookmarks' : 'Course saved to bookmarks!');
+                             }}
+                           >
+                             <Bookmark className="w-4 h-4 mr-2" /> {saved ? 'Saved' : 'Save'}
                            </Button>
                         </div>
                      </CardContent>

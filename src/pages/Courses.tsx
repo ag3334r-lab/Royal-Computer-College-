@@ -7,15 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Clock, Award, Filter, ArrowUpRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 
 export default function Courses() {
+  const [searchParams] = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'All';
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [courses, setCourses] = useState<Course[]>(MOCK_COURSES);
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [courses] = useState<Course[]>(MOCK_COURSES);
 
   const categories = ['All', 'AI & Data Science', 'Web Development', 'Graphic Designing', 'Cyber Security', 'Digital Marketing'];
+
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat && categories.includes(cat)) {
+      setActiveCategory(cat);
+    }
+  }, [searchParams]);
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -46,7 +55,7 @@ export default function Courses() {
              />
            </div>
 
-           <Tabs defaultValue="All" className="w-full lg:w-auto" onValueChange={setActiveCategory}>
+           <Tabs value={activeCategory} className="w-full lg:w-auto" onValueChange={setActiveCategory}>
              <TabsList className="bg-muted/50 p-1 h-auto flex-wrap justify-start">
                {categories.map(cat => (
                  <TabsTrigger key={cat} value={cat} className="rounded-xl px-4 py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all text-xs font-bold uppercase tracking-wider">

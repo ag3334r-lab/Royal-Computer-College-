@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, SkipBack, SkipForward, Maximize, Volume2, MessageSquare, Users, Sparkles, BrainCircuit } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Maximize, Volume2, MessageSquare, Users, Sparkles, BrainCircuit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 
 export default function OnlineClass() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [isPlaying, setIsPlaying] = useState(true);
   const [chat, setChat] = useState<{user: string, text: string}[]>([
     { user: 'Sarah AI', text: 'Welcome to this session on Prompt Engineering! Feel free to ask questions.' },
     { user: 'Student_12', text: 'Can we use zero-shot for data extraction?' }
@@ -28,7 +30,7 @@ export default function OnlineClass() {
          <div className="flex-grow flex flex-col gap-4">
             <div className="aspect-video bg-black rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 animate-pulse">
+                  <div className={`w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 ${isPlaying ? 'animate-pulse' : ''}`}>
                      <BrainCircuit className="w-10 h-10 text-primary" />
                   </div>
                </div>
@@ -36,7 +38,13 @@ export default function OnlineClass() {
                   <div className="flex items-center justify-between text-white">
                      <div className="flex items-center gap-6">
                         <SkipBack className="w-6 h-6 cursor-pointer hover:text-primary transition-colors" />
-                        <Play className="w-8 h-8 cursor-pointer hover:text-primary transition-colors" />
+                        <button type="button" onClick={() => setIsPlaying(!isPlaying)} aria-label="Toggle playback">
+                          {isPlaying ? (
+                            <Pause className="w-8 h-8 cursor-pointer hover:text-primary transition-colors" />
+                          ) : (
+                            <Play className="w-8 h-8 cursor-pointer hover:text-primary transition-colors" />
+                          )}
+                        </button>
                         <SkipForward className="w-6 h-6 cursor-pointer hover:text-primary transition-colors" />
                      </div>
                      <div className="flex-grow mx-8 h-1 bg-white/30 rounded-full overflow-hidden">
@@ -58,7 +66,9 @@ export default function OnlineClass() {
                   </div>
                   <h1 className="text-2xl font-display font-bold">Advanced AI & Prompt Engineering Masterclass</h1>
                </div>
-               <Button className="rounded-full shadow-lg shadow-primary/20"><Sparkles className="w-4 h-4 mr-2" /> Take Quiz</Button>
+               <Button className="rounded-full shadow-lg shadow-primary/20" onClick={() => navigate(`/quiz/${id || 'course-1'}`)}>
+                 <Sparkles className="w-4 h-4 mr-2" /> Take Quiz
+               </Button>
             </div>
          </div>
 
