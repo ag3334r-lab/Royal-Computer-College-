@@ -25,8 +25,9 @@ service cloud.firestore {
     }
 
     function getUserData(uid) {
-      let doc = get(/databases/$(database)/documents/users/$(uid));
-      return doc == null ? null : doc.data;
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data
+        : null;
     }
 
     function isAdmin() {
@@ -49,7 +50,7 @@ service cloud.firestore {
                data.email is string && data.email.size() <= 100;
       }
 
-      allow get: if isSignedIn();
+      allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && 
                       isValidUser(incoming()) && 

@@ -94,28 +94,41 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userRef);
           if (userDoc.exists()) {
             setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
           } else {
+            const safeName = (firebaseUser.displayName || 'Learner').slice(0, 100);
+            const safeEmail = (firebaseUser.email || `${firebaseUser.uid}@student.local`).slice(0, 100);
             const newUser: User = {
               id: firebaseUser.uid,
-              name: firebaseUser.displayName || 'Learner',
-              email: firebaseUser.email || '',
+              name: safeName,
+              email: safeEmail,
               role: 'student',
               profileImage: firebaseUser.photoURL || '',
               createdAt: serverTimestamp() as any,
               xp: 0,
               badges: [],
             };
-            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-            setUser(newUser);
+            try {
+              await setDoc(userRef, newUser);
+              setUser(newUser);
+            } catch (writeError) {
+              // Recover if another tab/registration flow created the profile concurrently
+              const retryDoc = await getDoc(userRef);
+              if (retryDoc.exists()) {
+                setUser({ id: firebaseUser.uid, ...retryDoc.data() } as User);
+              } else {
+                throw writeError;
+              }
+            }
           }
         } else {
           setUser(null);
         }
       } catch (error) {
-        console.error('Auth state sync error:', error);
+        console.warn('Auth profile sync fallback active:', error);
         if (firebaseUser) {
           setUser({
             id: firebaseUser.uid,

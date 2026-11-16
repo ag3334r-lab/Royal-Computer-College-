@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { UserPlus, Mail, Lock, User as UserIcon } from 'lucide-react';
@@ -26,17 +26,23 @@ export default function Register() {
       
       await updateProfile(firebaseUser, { displayName: name });
 
-      const newUser: User = {
-        id: firebaseUser.uid,
-        name,
-        email,
-        role: 'student',
-        createdAt: serverTimestamp() as any,
-        xp: 0,
-        badges: [],
-      };
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const existingSnap = await getDoc(userRef);
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      if (existingSnap.exists()) {
+        await updateDoc(userRef, { name });
+      } else {
+        const newUser: User = {
+          id: firebaseUser.uid,
+          name,
+          email,
+          role: 'student',
+          createdAt: serverTimestamp() as any,
+          xp: 0,
+          badges: [],
+        };
+        await setDoc(userRef, newUser);
+      }
       
       toast.success('Account created successfully!');
       navigate('/dashboard');
