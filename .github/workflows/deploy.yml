@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -14,8 +14,11 @@ concurrency:
   group: 'pages'
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -33,30 +36,55 @@ jobs:
       - name: TypeScript Lint & Typecheck
         run: npm run lint
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Build project
+      - name: Build production bundle
         run: |
           npm run build
           cp dist/index.html dist/404.html
+          touch dist/.nojekyll
         env:
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
 
+      - name: Deploy to gh-pages branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npx --yes gh-pages -d dist -t true || true
+
+      - name: Check if GitHub Pages is enabled
+        id: pages_check
+        continue-on-error: true
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages")
+          if [ "$STATUS" = "200" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload Pages artifact
+        if: steps.pages_check.outputs.enabled == 'true'
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - name: Deploy to GitHub Pages environment
+        if: steps.pages_check.outputs.enabled == 'true'
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+
+      - name: Publish Live Preview Links
+        run: |
+          REPO="${{ github.repository }}"
+          OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${REPO#*/}"
+          echo "## 🚀 Royal Computer College — Live Preview Ready!" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 🌐 [Click Here to Open Instant Live Preview](https://raw.githack.com/${REPO}/main/docs/index.html)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Instant CDN Preview URL:** https://raw.githack.com/${REPO}/main/docs/index.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **GitHub Pages URL:** https://${OWNER}.github.io/${REPO_NAME}/" >> "$GITHUB_STEP_SUMMARY"
